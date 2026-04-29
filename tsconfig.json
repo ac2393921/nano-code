@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
-    // Enable latest features
-    "lib": ["ESNext", "DOM"],
+    // Environment setup & latest features
+    "lib": ["ESNext"],
     "target": "ESNext",
-    "module": "ESNext",
+    "module": "Preserve",
     "moduleDetection": "force",
     "jsx": "react-jsx",
     "allowJs": true,
+    "types": ["bun"],
 
     // Bundler mode
     "moduleResolution": "bundler",
@@ -18,13 +19,12 @@
     "strict": true,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
 
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false,
-    "noUncheckedIndexedAccess": true
-  },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "bin/**/*.ts", "chapters/**/*.ts", "workspace/**/*.ts", "test-streaming.ts"],
-  "exclude": ["node_modules", "groq-code-cli", "sandbox-runtime", "book"]
+    "noPropertyAccessFromIndexSignature": false
+  }
 }

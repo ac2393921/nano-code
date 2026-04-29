@@ -1,20 +1,12 @@
 {
-  "name": "nano-code",
+  "name": "/nano-code",
+  "module": "index.ts",
   "type": "module",
+  "private": true,
   "devDependencies": {
     "@types/bun": "latest"
   },
-  "scripts": {
-    "agent": "bun run bin/cli.ts",
-    "action": "bun run bin/action.ts",
-    "test": "bun test workspace/calculator.test.ts src/core/generate-text.test.ts src/core/generate-stream.test.ts"
-  },
   "peerDependencies": {
-    "typescript": "^5.0.0"
-  },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.71.2",
-    "@google/genai": "^1.33.0",
-    "openai": "^6.10.0"
+    "typescript": "^5"
   }
 }
