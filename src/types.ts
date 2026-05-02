@@ -2,6 +2,7 @@
 export type Tool = {
     name: string;
     description: string;
+    needsApproval?: boolean;
     parameters: Record<string, unknown>; // JSON Schema相当（型チェックは実行時）
     execute: (args: Record<string, unknown>) => Promise<string>;
 };

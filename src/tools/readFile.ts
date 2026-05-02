@@ -7,7 +7,7 @@ const WORKSPACE_ROOT = path.resolve(process.cwd(), './workspace');
 // 読み込み可能なファイルの最大サイズ
 const MAX_FILE_SIZE = 100 * 1024; // 100KB
 
-async function readFileExecute(args: {path: string}): Promise<string> {
+async function readFileExecute(args: { path: string }): Promise<string> {
     // ステップ１：相対パスを絶対パスに変換
     const absolutePath = path.resolve(WORKSPACE_ROOT, args.path);
 
