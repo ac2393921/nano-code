@@ -10,9 +10,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     nano  \
     bubblewrap \
+    sudo \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # 非rootユーザーを作成
+RUN echo "vscode ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/vscode && \
+    chmod 0440 /etc/sudoers.d/vscode
 RUN useradd -ms /bin/bash vscode
 USER vscode
 WORKDIR /nano-code
