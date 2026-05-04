@@ -15,6 +15,6 @@
     "openai": "^6.35.0"
   },
   "scripts": {
-    "agent": "bun run bin/cil.ts"
+    "agent": "bun run bin/cli.ts"
   }
 }
