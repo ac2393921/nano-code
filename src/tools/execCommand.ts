@@ -1,14 +1,17 @@
 import { spawn } from 'child_process';
 import * as path from 'path';
-import { isArrayBindingElement } from 'typescript';
+import type { Tool } from '../types';
 
 const WORKSPACE_ROOT = path.resolve(process.cwd(), './workspace');
-const ALLOWED_COMMANDS = ['bun', 'ls', 'git', 'gh'];
-const MAX_OUTPUT_LENGTH = 2048;
-
-const dangerousChars = /[;&`$]/;
+const ALLOWED_COMMANDS = ['bun', 'ls', 'cat', 'grep', 'find', 'pwd', 'mkdir', 'git', 'gh'];
+const MAX_OUTPUT_LENGTH = 2000;
 
 type Quote = '"' | "'" | null;
+type ExecCommandInput = {
+    command?: unknown;
+    commandName?: unknown;
+    commandArgs?: unknown;
+};
 
 // 引用符付き引数をサポートする最小限のコマンドパーサ
 export function parseCommand(input: string): string[] {
@@ -80,42 +83,66 @@ export function parseCommand(input: string): string[] {
     return tokens;
 }
 
-async function execCommandExecute(args: { command: string }): Promise<string> {
-    // 1. 危険文字チェック
-    if (dangerousChars.test(args.command)) {
-        throw new Error(`コマンド連結・痴漢文字を含むコマンドは実行できません`);
+async function execCommandExecute(args: Record<string, unknown>): Promise<string> {
+    const input = args as ExecCommandInput;
+    let commandName = '';
+    let commandArgs: string[] = [];
+    let commandForCheck = '';
+
+    if (typeof input.command === 'string') {
+        const command = input.command;
+        const dangerousChars = /[;&`$]/;
+        if (dangerousChars.test(command)) {
+            throw new Error('セキュリティ上の理由により、シェルメタ文字を含むコマンドは実行できません');
+        }
+
+        const parts = parseCommand(command);
+        commandName = parts[0] || '';
+        commandArgs = parts.slice(1);
+        commandForCheck = command;
+    } else if (typeof input.commandName === 'string') {
+        commandName = input.commandName;
+        if (Array.isArray(input.commandArgs)) {
+            if (!input.commandArgs.every((arg) => typeof arg === 'string')) {
+                throw new Error('commandArgs は文字列配列で指定してください');
+            }
+            commandArgs = input.commandArgs as string[];
+        }
+        commandForCheck = [commandName, ...commandArgs].join(' ');
+    } else {
+        throw new Error('command または commandName を指定してください');
     }
 
-    // 2. コマンドの解析
-    const parts = parseCommand(args.command);
-    if (parts.length === 0) {
+    if (!commandName) {
         throw new Error('コマンドが空です');
     }
 
-    const commandName = parts[0] || '';
-    const commandArgs = parts.slice(1);
-
-    // 3. ホワイトリストチェック
     if (!ALLOWED_COMMANDS.includes(commandName)) {
-        throw new Error(`コマンド ${commandName} は許可されていません。許可されているコマンド： ${ALLOWED_COMMANDS.join('. ')}`);
+        throw new Error(`コマンド ${commandName} は許可されていません`);
     }
 
-    // 4. パス引数の検証（ワークスペース内かチェック）
+    const dangerousPatterns = [/rm\s+-rf/, />\s*\/dev/, /curl.*\|.*sh/, /wget.*\|.*sh/];
+    for (const pattern of dangerousPatterns) {
+        if (pattern.test(commandForCheck)) {
+            throw new Error('危険なコマンドパターンが検出されました');
+        }
+    }
+
     for (const arg of commandArgs) {
-        if (arg.includes('/') || arg.includes('\\')) {
+        if (arg.startsWith('/') || arg.startsWith('.') || arg.includes('/') || arg.includes('\\')) {
             const resolvedPath = path.resolve(WORKSPACE_ROOT, arg);
-            if (!resolvedPath.startsWith(WORKSPACE_ROOT + path.sep) && resolvedPath !== WORKSPACE_ROOT) {
+            const allowedPrefix = WORKSPACE_ROOT + path.sep;
+            if (!resolvedPath.startsWith(allowedPrefix) && resolvedPath !== WORKSPACE_ROOT) {
                 throw new Error(`アクセス拒否: ${arg} はワークスペース外です`);
             }
         }
     }
 
-    // 5. spawn()で実行（shell: falseでコマンドインジェクション対策）
     return new Promise((resolve, reject) => {
         const child = spawn(commandName, commandArgs, {
             cwd: WORKSPACE_ROOT,
             timeout: 30000,
-            shell: false, // シェルを介さない
+            shell: false,
         });
 
         let stdout = '';
@@ -161,9 +188,9 @@ async function execCommandExecute(args: { command: string }): Promise<string> {
             reject(new Error(`コマンド実行エラー: ${error.message}`));
         });
     });
-};
+}
 
-export const execCommand = {
+export const execCommand: Tool = {
     name: 'execCommand',
     description:
         'ワークスペース内で許可された汎用コマンドを実行する。利用可能：bun、ls、cat、grep、find、pwd、mkdir、git、gh。',
