@@ -1,18 +1,21 @@
-import { add, divide } from './calculator';
+import { add, divide, Result } from './calculator';
 import { describe, it, expect } from 'vitest';
 
 describe('add', () => {
-  it('should add two numbers', () => {
-    expect(add(1, 2)).toBe(3);
+  it('returns success true and correct value', () => {
+    const res: Result = add(1, 2);
+    expect(res).toEqual({ success: true, value: 3 });
   });
 });
 
 describe('divide', () => {
-  it('should divide two numbers', () => {
-    expect(divide(4, 2)).toBe(2);
+  it('returns success true and correct value for non-zero divisor', () => {
+    const res: Result = divide(4, 2);
+    expect(res).toEqual({ success: true, value: 2 });
   });
 
-  it('should throw an error when dividing by zero', () => {
-    expect(() => divide(4, 0)).toThrow('Cannot divide by zero');
+  it('returns error when dividing by zero', () => {
+    const res: Result = divide(4, 0);
+    expect(res).toEqual({ success: false, error: 'Cannot divide by zero' });
   });
 });

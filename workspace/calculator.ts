@@ -1,11 +1,16 @@
+export type Result =
+  | { success: true; value: number }
+  | { success: false; error: string };
 
-export function add(a: number, b: number): number {
-  return a + b;
+export function add(a: number, b: number): Result {
+  const value: number = a + b;
+  return { success: true, value };
 }
 
-export function divide(a: number, b: number): number {
+export function divide(a: number, b: number): Result {
   if (b === 0) {
-    throw new Error("Cannot divide by zero");
+    return { success: false, error: "Cannot divide by zero" };
   }
-  return a / b;
+  const value: number = a / b;
+  return { success: true, value };
 }
