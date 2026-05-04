@@ -6,6 +6,7 @@ import { readFile } from '../src/tools/readFile';
 import { writeFile } from '../src/tools/writeFile';
 import { editFile } from '../src/tools/editFile';
 import { execCommand } from '../src/tools/execCommand';
+import { parseArgs } from 'util';
 
 async function main() {
     const args = process.argv.slice(2);
@@ -27,6 +28,15 @@ async function main() {
     // プロンプトを読み込む（ベース + AGENTS.md）
     const instructions = loadInstructions(workspaceRoot);
 
+    const { values } = parseArgs({
+        args: process.argv.slice(2),
+        options: {
+            'yolo': { type: 'boolean', default: false },
+        }
+    });
+
+    const yoloMode = values['yolo'];
+
     const agent = new Agent({
         name: 'nano-code',
         model,
@@ -38,6 +48,7 @@ async function main() {
             execCommand,
         },
         maxSteps: 8,
+        approvalFunc: yoloMode ? async () => true : undefined,
     });
 
     console.log("エージェント起動\n");
